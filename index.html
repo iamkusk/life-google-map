@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>人生のGoogleマップ - スマホ画面生成</title>
+  <style>
+    body {
+      font-family: 'Arial','Hiragino Sans','Yu Gothic',sans-serif;
+      background: #f5f5f5;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container {
+      background: #fff; border-radius: 10px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%; max-width: 400px; margin-bottom: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 12px; font-size: 20px; }
+    .step-input { margin-bottom: 12px; }
+    .step-input label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 14px; }
+    .step-input textarea {
+      width: 100%; min-height: 50px; padding: 8px;
+      font-size: 14px; border: 1px solid #ccc; border-radius: 4px;
+      resize: vertical;
+    }
+    #generateBtn {
+      width: 100%; padding: 10px; font-size: 16px;
+      background: #667eea; color: #fff; border: none; border-radius: 6px;
+      cursor: pointer;
+    }
+    #loading { display: none; text-align: center; margin-top: 8px; font-size: 14px; }
+    .output { text-align: center; margin-top: 20px; }
+    canvas { border: 1px solid #ddd; max-width: 100%; height: auto; }
+    .download-btn {
+      margin-top: 8px; padding: 8px 16px;
+      background: #28a745; color: #fff; border: none; border-radius: 4px;
+      cursor: pointer; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>人生のGoogleマップ</h1>
+    <!-- ステップ1～5の入力欄 -->
+    <div class="step-input">
+      <label for="input1">ステップ1</label>
+      <textarea id="input1" placeholder="3年後の最終ゴールは？"></textarea>
+    </div>
+    <div class="step-input">
+      <label for="input2">ステップ2</label>
+      <textarea id="input2" placeholder="現在の自分の状況は？"></textarea>
+    </div>
+    <div class="step-input">
+      <label for="input3">ステップ3</label>
+      <textarea id="input3" placeholder="失敗時の対応方法は？"></textarea>
+    </div>
+    <div class="step-input">
+      <label for="input4">ステップ4</label>
+      <textarea id="input4" placeholder="前進をどう記録する？"></textarea>
+    </div>
+    <div class="step-input">
+      <label for="input5">ステップ5</label>
+      <textarea id="input5" placeholder="ゴール見直しのタイミングは？"></textarea>
+    </div>
+    <button id="generateBtn">スマホ画面用画像を生成</button>
+    <div id="loading">生成中…</div>
+  </div>
+
+  <div class="output" id="output"></div>
+
+  <script>
+    // スマホ向けキャンバスサイズ（例：360×640px）
+    const PHONE = { w: 360, h: 640 };
+    const titles = [
+      "ステップ1：最終ゴール",
+      "ステップ2：現在地受入れ",
+      "ステップ3：ルート変更",
+      "ステップ4：前進記録",
+      "ステップ5：ゴール見直し"
+    ];
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const texts = [
+        document.getElementById('input1').value.trim(),
+        document.getElementById('input2').value.trim(),
+        document.getElementById('input3').value.trim(),
+        document.getElementById('input4').value.trim(),
+        document.getElementById('input5').value.trim()
+      ];
+      if (texts.some(t => !t)) {
+        alert('すべてのステップに回答を入力してください。');
+        return;
+      }
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('output').innerHTML = '';
+      setTimeout(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = PHONE.w;
+        canvas.height = PHONE.h;
+        const ctx = canvas.getContext('2d');
+        drawSmartphone(ctx, titles, texts);
+        const btn = document.createElement('button');
+        btn.className = 'download-btn';
+        btn.textContent = 'ダウンロード：スマホ用画像';
+        btn.onclick = () => {
+          const link = document.createElement('a');
+          link.download = 'life-google-map_phone.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+        document.getElementById('output').appendChild(canvas);
+        document.getElementById('output').appendChild(btn);
+        document.getElementById('loading').style.display = 'none';
+      }, 200);
+    });
+
+    function drawSmartphone(ctx, titles, texts) {
+      // 背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, PHONE.w, PHONE.h);
+
+      // タイトル
+      ctx.fillStyle = '#2c3e50';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText('人生のGoogleマップ', PHONE.w / 2, 30);
+
+      // 各ステップを縦リストで配置
+      const marginX = 16;
+      let y = 60;
+      for (let i = 0; i < 5; i++) {
+        // ステップ番号とタイトル
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(titles[i], marginX, y);
+        y += 20;
+
+        // 本文
+        ctx.fillStyle = '#34495e';
+        ctx.font = '14px Arial';
+        y = wrapText(ctx, texts[i], marginX, y, PHONE.w - marginX * 2, 18);
+        y += 16;
+      }
+    }
+
+    // 自動改行関数
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      let line = '';
+      for (const ch of text) {
+        const testLine = line + ch;
+        const { width } = ctx.measureText(testLine);
+        if (width > maxWidth && line) {
+          ctx.fillText(line, x, y);
+          line = ch;
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+      return y + lineHeight;
+    }
+  </script>
+</body>
+</html>
