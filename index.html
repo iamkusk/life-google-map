@@ -3,38 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>人生のGoogleマップ - 統合画像生成</title>
+  <title>人生のGoogleマップ - スマホ画面生成</title>
   <style>
     body {
       font-family: 'Arial','Hiragino Sans','Yu Gothic',sans-serif;
-      background: #f5f5f5; margin:0; padding:20px;
-      display:flex; flex-direction:column; align-items:center;
+      background: #f5f5f5;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
     }
     .container {
-      background:#fff; border-radius:10px; padding:20px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      width:100%; max-width:600px; margin-bottom:20px;
+      background: #fff; border-radius: 10px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%; max-width: 400px; margin-bottom: 20px;
     }
-    h1 { text-align:center; margin-bottom:16px; }
-    .step-input { margin-bottom:12px; }
-    .step-input label { display:block; font-weight:bold; margin-bottom:4px; }
+    h1 { text-align: center; margin-bottom: 12px; font-size: 20px; }
+    .step-input { margin-bottom: 12px; }
+    .step-input label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 14px; }
     .step-input textarea {
-      width:100%; min-height:60px; padding:8px;
-      font-size:14px; border:1px solid #ccc; border-radius:4px;
-      resize:vertical;
+      width: 100%; min-height: 50px; padding: 8px;
+      font-size: 14px; border: 1px solid #ccc; border-radius: 4px;
+      resize: vertical;
     }
     #generateBtn {
-      width:100%; padding:12px; font-size:16px;
-      background:#667eea; color:#fff; border:none; border-radius:6px;
-      cursor:pointer;
+      width: 100%; padding: 10px; font-size: 16px;
+      background: #667eea; color: #fff; border: none; border-radius: 6px;
+      cursor: pointer;
     }
-    #loading { display:none; text-align:center; margin-top:10px; }
-    .output { text-align:center; margin-top:20px; }
-    canvas { border:1px solid #ddd; }
+    #loading { display: none; text-align: center; margin-top: 8px; font-size: 14px; }
+    .output { text-align: center; margin-top: 20px; }
+    canvas { border: 1px solid #ddd; max-width: 100%; height: auto; }
     .download-btn {
-      margin-top:8px; padding:8px 16px;
-      background:#28a745; color:#fff; border:none; border-radius:4px;
-      cursor:pointer;
+      margin-top: 8px; padding: 8px 16px;
+      background: #28a745; color: #fff; border: none; border-radius: 4px;
+      cursor: pointer; font-size: 14px;
     }
   </style>
 </head>
@@ -43,39 +44,40 @@
     <h1>人生のGoogleマップ</h1>
     <!-- ステップ1～5の入力欄 -->
     <div class="step-input">
-      <label for="input1">ステップ1の質問・回答</label>
-      <textarea id="input1" placeholder="例：3年後の最終ゴールは？"></textarea>
+      <label for="input1">ステップ1</label>
+      <textarea id="input1" placeholder="3年後の最終ゴールは？"></textarea>
     </div>
     <div class="step-input">
-      <label for="input2">ステップ2の質問・回答</label>
-      <textarea id="input2" placeholder="例：現在の自分の状況は？"></textarea>
+      <label for="input2">ステップ2</label>
+      <textarea id="input2" placeholder="現在の自分の状況は？"></textarea>
     </div>
     <div class="step-input">
-      <label for="input3">ステップ3の質問・回答</label>
-      <textarea id="input3" placeholder="例：失敗したときどう対応する？"></textarea>
+      <label for="input3">ステップ3</label>
+      <textarea id="input3" placeholder="失敗時の対応方法は？"></textarea>
     </div>
     <div class="step-input">
-      <label for="input4">ステップ4の質問・回答</label>
-      <textarea id="input4" placeholder="例：毎日の前進をどう記録する？"></textarea>
+      <label for="input4">ステップ4</label>
+      <textarea id="input4" placeholder="前進をどう記録する？"></textarea>
     </div>
     <div class="step-input">
-      <label for="input5">ステップ5の質問・回答</label>
-      <textarea id="input5" placeholder="例：ゴールをいつ見直す？"></textarea>
+      <label for="input5">ステップ5</label>
+      <textarea id="input5" placeholder="ゴール見直しのタイミングは？"></textarea>
     </div>
-    <button id="generateBtn">統合画像を生成</button>
+    <button id="generateBtn">スマホ画面用画像を生成</button>
     <div id="loading">生成中…</div>
   </div>
 
   <div class="output" id="output"></div>
 
   <script>
-    const A4 = { w:2480, h:3508 };
+    // スマホ向けキャンバスサイズ（例：360×640px）
+    const PHONE = { w: 360, h: 640 };
     const titles = [
-      "ステップ1：最終ゴールを紙に書く",
-      "ステップ2：現在地を正直に受け入れる",
-      "ステップ3：道を間違えても「ルート変更」と考える",
-      "ステップ4：毎日の小さな前進を記録する",
-      "ステップ5：定期的にゴールを見直す"
+      "ステップ1：最終ゴール",
+      "ステップ2：現在地受入れ",
+      "ステップ3：ルート変更",
+      "ステップ4：前進記録",
+      "ステップ5：ゴール見直し"
     ];
 
     document.getElementById('generateBtn').addEventListener('click', () => {
@@ -86,7 +88,7 @@
         document.getElementById('input4').value.trim(),
         document.getElementById('input5').value.trim()
       ];
-      if (texts.some(t=>!t)) {
+      if (texts.some(t => !t)) {
         alert('すべてのステップに回答を入力してください。');
         return;
       }
@@ -94,72 +96,71 @@
       document.getElementById('output').innerHTML = '';
       setTimeout(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = A4.w; canvas.height = A4.h;
+        canvas.width = PHONE.w;
+        canvas.height = PHONE.h;
         const ctx = canvas.getContext('2d');
-        drawIntegrated(ctx, titles, texts);
+        drawSmartphone(ctx, titles, texts);
         const btn = document.createElement('button');
         btn.className = 'download-btn';
-        btn.textContent = 'ダウンロード：統合A4画像';
-        btn.onclick = ()=>{
+        btn.textContent = 'ダウンロード：スマホ用画像';
+        btn.onclick = () => {
           const link = document.createElement('a');
-          link.download = '人生のGoogleマップ_統合.png';
+          link.download = 'life-google-map_phone.png';
           link.href = canvas.toDataURL('image/png');
           link.click();
         };
         document.getElementById('output').appendChild(canvas);
         document.getElementById('output').appendChild(btn);
         document.getElementById('loading').style.display = 'none';
-      }, 300);
+      }, 200);
     });
 
-    function drawIntegrated(ctx, titles, texts) {
+    function drawSmartphone(ctx, titles, texts) {
       // 背景
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0,0,A4.w,A4.h);
-      const margin = 120;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, PHONE.w, PHONE.h);
+
+      // タイトル
       ctx.fillStyle = '#2c3e50';
       ctx.textAlign = 'center';
-      ctx.font = 'bold 80px Arial';
-      ctx.fillText('人生のGoogleマップ', A4.w/2, margin);
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText('人生のGoogleマップ', PHONE.w / 2, 30);
 
-      // 各ステップをカルーセル配置
-      const colCount = 2;
-      const rowCount = 3;
-      const boxW = (A4.w - margin*2) / colCount;
-      const boxH = (A4.h - margin*2 - 100) / rowCount;
+      // 各ステップを縦リストで配置
+      const marginX = 16;
+      let y = 60;
       for (let i = 0; i < 5; i++) {
-        const col = i % colCount;
-        const row = Math.floor(i / colCount);
-        const x = margin + boxW * col;
-        const y = margin + 100 + boxH * row;
-        drawBox(ctx, x, y, boxW, boxH, titles[i], texts[i]);
+        // ステップ番号とタイトル
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(titles[i], marginX, y);
+        y += 20;
+
+        // 本文
+        ctx.fillStyle = '#34495e';
+        ctx.font = '14px Arial';
+        y = wrapText(ctx, texts[i], marginX, y, PHONE.w - marginX * 2, 18);
+        y += 16;
       }
     }
 
-    function drawBox(ctx, x, y, w, h, title, text) {
-      // ボックスタイトル
-      ctx.fillStyle = '#e74c3c';
-      ctx.font = 'bold 40px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(title, x + 10, y + 50);
-
-      // テキスト本文
-      ctx.fillStyle = '#34495e';
-      ctx.font = '28px Arial';
-      const maxW = w - 20;
+    // 自動改行関数
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
       let line = '';
-      let yy = y + 90;
-      [...text].forEach(ch => {
-        const test = line + ch;
-        if (ctx.measureText(test).width > maxW) {
-          ctx.fillText(line, x+10, yy);
+      for (const ch of text) {
+        const testLine = line + ch;
+        const { width } = ctx.measureText(testLine);
+        if (width > maxWidth && line) {
+          ctx.fillText(line, x, y);
           line = ch;
-          yy += 36;
+          y += lineHeight;
         } else {
-          line = test;
+          line = testLine;
         }
-      });
-      ctx.fillText(line, x+10, yy);
+      }
+      ctx.fillText(line, x, y);
+      return y + lineHeight;
     }
   </script>
 </body>
